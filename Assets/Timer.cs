@@ -98,32 +98,27 @@ public class Timer : MonoBehaviour
                 StartCoroutine(synhronizer);
             }
         }
-        //test
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            Time.timeScale += 5f;
-        }
-        else if (Input.GetKeyDown(KeyCode.E))
-        {
-            Time.timeScale = 1;
-        }
+        
     }
 
     private void SetHoursText(int hours)
     {
-        hoursText.text = $"{hours:D2}";
+        //hoursText.text = $"{hours:D2}";
+        hoursText.text = hours.ToString("00");
         HoursChangeEvent?.Invoke(hours);
     }
 
     private void SetMinutsText(int min)
     {
-        minutsText.text = $"{min:D2}";
+        //minutsText.text = $"{min:D2}";
+        minutsText.text = min.ToString("00");
         MinutsChangeEvent?.Invoke(minuts);
     }
 
     private void SetSeconds(int seconds)
     {
-        secondsText.text = $"{ seconds:D2}";
+        //secondsText.text = $"{ seconds:D2}";
+        secondsText.text = seconds.ToString("00");
         SecondsChangeEvent?.Invoke(seconds);
     }
 

@@ -12,6 +12,8 @@ public class TimeService : MonoBehaviour
 
     private bool timeIsReady;
     private string url = "https://worldtimeapi.org/api/ip";
+    private string url1 = "http://worldclockapi.com/api/json/est/now";
+    private string url2 = "http://worldclockapi.com/api/json/utc/now";
     private DateTime currentData;
     private IEnumerator timeCoroutine;
 
@@ -31,14 +33,14 @@ public class TimeService : MonoBehaviour
         timeIsReady = false;
         if (timeCoroutine == null)
         {
-            timeCoroutine = GetTime(SerializeResult);
+            timeCoroutine = GetTime(new string[] { url, url1, url2 }, SerializeResult);
             StartCoroutine(timeCoroutine);
         }
         else
         {
             StopCoroutine(timeCoroutine);
             timeCoroutine = null;
-            timeCoroutine = GetTime(SerializeResult);
+            timeCoroutine = GetTime(new string[] { url, url1, url2 }, SerializeResult);
             StartCoroutine(timeCoroutine);
         }
     }
@@ -54,58 +56,80 @@ public class TimeService : MonoBehaviour
             currentData.Kind);
     }
 
-    private void SerializeResult(string str)
+    private void SerializeResult(string[] str)
     {
-        foreach (var c in str.Split(','))
+        List<DateTime> dateTime = new List<DateTime>();
+        int index = str.Length;
+        int indexer = 0;
+        while (indexer < index)
         {
-            if (c.StartsWith(@"""datetime"""))
+            string currentStr = str[indexer];
+            indexer++;
+
+            foreach (var c in currentStr.Split(','))
             {
-                foreach (var splitedC in c.Split('"'))
+                if (c.StartsWith(@"""datetime""") || c.StartsWith(@"""currentDateTime"""))
                 {
-                    if (!String.IsNullOrEmpty(splitedC) && !Char.IsNumber(splitedC[0]))
+                    foreach (var splitedC in c.Split('"'))
                     {
-                        continue;
-                    }
-                    else
-                    {
-                        try
+                        if (!String.IsNullOrEmpty(splitedC) && !Char.IsNumber(splitedC[0]))
                         {
-                            currentData = DateTime.Parse(splitedC);
+                            continue;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                DateTime tm = DateTime.Parse(splitedC);
+                                dateTime.Add(tm);
+                            }
+                            catch
+                            {
+                                //ничего не делаем по идее если строка в апи соответствует стандарту ISO 8601 то все гуд
+                            }
                             
                         }
-                        catch
-                        {
-                            //ничего не делаем по идее если строка в апи соответствует стандарту ISO 8601 то все гуд
-                        }
-                        
+
                     }
-                        
+                    break;
                 }
-                timeIsReady = true;
-                return;
-            }
         }
         
+        }
+        currentData = dateTime[0];
+        timeIsReady = true;
+
     }
 
-    private IEnumerator GetTime(Action<string> callback)
+    private IEnumerator GetTime(string[] str, Action<string[]> callback)
     {
-        using (UnityWebRequest request = UnityWebRequest.Get(url))
+        string[] results = new string[str.Length];
+        int index = str.Length;
+        int indexer = 0;
+        while (indexer < index)
         {
-            yield return request.SendWebRequest();
-            if (request.result == UnityWebRequest.Result.ConnectionError)
+            string currentStr = str[indexer];
+            
+            using (UnityWebRequest request = UnityWebRequest.Get(currentStr))
             {
-                Debug.LogError("network problem: " + request.error);
-            }
-            else if (request.responseCode !=
-          (long)System.Net.HttpStatusCode.OK)
-            {
-                Debug.LogError("response error: " + request.responseCode);
-            }
-            else
-            {
-                callback(request.downloadHandler.text);
+                yield return request.SendWebRequest();
+                if (request.result == UnityWebRequest.Result.ConnectionError)
+                {
+                    Debug.LogError("network problem: " + request.error);
+                }
+                else if (request.responseCode !=
+              (long)System.Net.HttpStatusCode.OK)
+                {
+                    Debug.LogError("response error: " + request.responseCode);
+                }
+                else
+                {
+                    results[indexer] = request.downloadHandler.text;
+                }
+                indexer++;
             }
         }
+
+        callback(results);
     }
 }

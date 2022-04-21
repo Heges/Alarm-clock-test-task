@@ -67,13 +67,15 @@ public class AlarmMaster : MonoBehaviour, IDragHandler, IEndDragHandler
         if (currentArrow && currentArrow.CompareTag("AlarmMinut"))
         {
             int minutes = Mathf.RoundToInt((decimalValue * 5) % 60);
-            alarmClock.SetAlarmMinuts($"{minutes:D2}");
+            alarmClock.SetAlarmMinuts(minutes.ToString("00"));
+            //alarmClock.SetAlarmMinuts($"{minutes:D2}");
             
         }
         else if (currentArrow && currentArrow.CompareTag("AlarmHour"))
         {
             hours = Mathf.FloorToInt(decimalValue % 12);
-            alarmClock.SetAlarmHours($"{hours:D2}");
+            alarmClock.SetAlarmHours(hours.ToString("00"));
+            //alarmClock.SetAlarmHours($"{hours:D2}");
         }
     }
 }
